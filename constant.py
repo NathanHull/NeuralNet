@@ -1,0 +1,2 @@
+MAX_INIT = .2
+RANDOM_SEED = 1
