@@ -28,16 +28,16 @@ def hiddenActivationFunction(sigma):
 	# return round((2 / (1 + (math.e ** (sigma * -1))) - 1, ROUND_TO)
 
 	# Binary Sigmoid
-	# return round(1 / (1 + (math.e ** (-1 * sigma))), ROUND_TO)
+	return 1 / (1 + (math.e ** (-1 * sigma)))
 
 	# Rectified Linear Unit (ReLU)
 	# return max(0, sigma)
 
 	# Leaky ReLU
-	if sigma >= 0:
-		return sigma
-	else:
-		return (1/10) * sigma
+	# if sigma >= 0:
+	# 	return sigma
+	# else:
+	# 	return (1/20) * sigma
 
 
 def hiddenErrorFunction(layer, fromNode, toNode, outputError):
@@ -48,7 +48,7 @@ def hiddenErrorFunction(layer, fromNode, toNode, outputError):
 	if net[layer][fromNode].value >= 0:
 		return 1
 	else:
-		return (1/100)
+		return (1/20)
 
 
 def outputActivationFunction():
@@ -80,32 +80,66 @@ def outputErrorFunction(target):
 	softmax = [i/sum_of_exps for i in exps]
 	thisSum = sum(softmax)
 	softmaxIndex = softmax.index(max(softmax))
-	return -1 * math.log(softmax[softmaxIndex]/thisSum)
+	return softmax[softmaxIndex] - softmax[target]
+	# return -1 * math.log(softmax[softmaxIndex]/thisSum)
 
 
 def backpropagate(target):
 	output = outputActivationFunction()
 	outputError = outputErrorFunction(target)
-	print ('Output:', output,' and error:', outputError)
+
+	# Calculate Errors
+	errors = {}
+	for i in range(numLayers + 1):
+		errors[i] = {}
 
 	for i in range(NUMINITNODES):
 		for j in range(numNodes):
-			error = net[0][i].value * (1 - net[0][i].value) * (net[0][i].weights[j] * outputError)
-			net[0][i].weights[j] += LEARNING_FACTOR * error * net[0][i].value
-			net[0][i].weights[j] = round(net[0][i].weights[j], ROUND_TO)
-
+			errors[0][i] = net[0][i].value * (1 - net[0][i].value) * (net[0][i].weights[j] * outputError)
 	for i in range(1, numLayers):
 		for j in range(numNodes):
 			if i == numLayers - 1:
-				for k in range(numNodes):
-					error = net[i][j].value * (1 - net[i][j].value) * (net[i][j].weights[k] * outputError)
-					net[i][j].weights[k] += LEARNING_FACTOR * error * net[i][j].value
-					net[i][j].weights[k] = round(net[i][j].weights[0], ROUND_TO)
+				for k in range(NUMOUTPUTNODES):
+					errors[i][j] = net[i][j].value * (1 - net[i][j].value) * (net[i][j].weights[k] * outputError)
 			else:
 				for k in range(numNodes):
-					error = net[i][j].value * (1 - net[i][j].value) * (net[i][j].weights[k] * outputError)
-					net[i][j].weights[k] += LEARNING_FACTOR * error * net[i][j].value
-					net[i][j].weights[k] = round(net[i][j].weights[k], ROUND_TO)
+					errors[i][j] = net[i][j].value * (1 - net[i][j].value) * (net[i][j].weights[k] * outputError)
+	for i in range(NUMOUTPUTNODES):
+		errors[numLayers][i] = outputError
+
+	# Learn (adjust weights)
+	for i in range(NUMINITNODES):
+		for j in range(numNodes):
+			net[0][i].weights[j] += LEARNING_FACTOR * errors[0 + 1][j] * net[0][i].value
+	for i in range(1, numLayers):
+		for j in range(numNodes):
+			if i == numLayers - 1:
+				for k in range(NUMOUTPUTNODES):
+					net[i][j].weights[k] += LEARNING_FACTOR * errors[i + 1][k] * net[i][j].value
+			else:
+				for k in range(numNodes):
+					net[i][j].weights[k] += LEARNING_FACTOR * errors[i + 1][k] * net[i][j].value
+
+	# Sigmoid error calc
+
+	# for i in range(NUMINITNODES):
+	# 	for j in range(numNodes):
+	# 		error = net[0][i].value * (1 - net[0][i].value) * (net[0][i].weights[j] * outputError)
+	# 		net[0][i].weights[j] += LEARNING_FACTOR * error * net[0][i].value
+	# 		net[0][i].weights[j] = round(net[0][i].weights[j], ROUND_TO)
+
+	# for i in range(1, numLayers):
+	# 	for j in range(numNodes):
+	# 		if i == numLayers - 1:
+	# 			for k in range(NUMOUTPUTNODES):
+	# 				error = net[i][j].value * (1 - net[i][j].value) * (net[i][j].weights[k] * outputError)
+	# 				net[i][j].weights[k] += LEARNING_FACTOR * error * net[i][j].value
+	# 				net[i][j].weights[k] = round(net[i][j].weights[0], ROUND_TO)
+	# 		else:
+	# 			for k in range(numNodes):
+	# 				error = net[i][j].value * (1 - net[i][j].value) * (net[i][j].weights[k] * outputError)
+	# 				net[i][j].weights[k] += LEARNING_FACTOR * error * net[i][j].value
+	# 				net[i][j].weights[k] = round(net[i][j].weights[k], ROUND_TO)
 
 
 def feedforward(target):
@@ -135,8 +169,6 @@ def feedforward(target):
 				sop += net[i][numNodes].value * net[i][numNodes].weights[j]
 				net[i+1][j].value = hiddenActivationFunction(sop)
 
-	backpropagate(target)
-
 def printNet():
 	print('Neural Net:')
 	print('Output: %i\n' % (outputActivationFunction()))
@@ -151,7 +183,10 @@ def printNet():
 				print('\tB: %.3f' % (net[i][j].value), end=' ')
 			else:
 				print('\t%i: %.3f' % (j, net[i][j].value), end=' ')
-			print(net[i][j].weights)
+			print('[',end=' ')
+			for k, v in net[i][j].weights.items():
+				print('%i: %.3f' % (k, v), end=' ')
+			print(']')
 		print()
 	print('Initial Layer')
 	for i in range(NUMINITNODES + 1):
@@ -159,13 +194,16 @@ def printNet():
 			print('\tB: %.3f' % (net[0][i].value), end=' ')
 		else:
 			print('\t%i: %.3f' % (i, net[0][i].value), end=' ')
-		print(net[0][i].weights)
+		print('[',end=' ')
+		for k, v in net[0][j].weights.items():
+			print('%i: %.3f' % (k, net[0][j].weights[k]), end=' ')
+		print(']')
 	print()
 
 
 if __name__ == '__main__':
-	if (len(sys.argv)) != 2:
-		print('Usage error: prog.py [filename]')
+	if (len(sys.argv)) != 3:
+		print('Usage error: prog.py [train filename] [test filename]')
 		sys.exit()
 	try:
 		numLayers = int(input('Number of hidden layers (2): '))
@@ -229,5 +267,24 @@ if __name__ == '__main__':
 				print('\nInitial', end=' ')
 				printNet()
 			feedforward(target)
+			backpropagate(target)
 			print('Target:',target)
 			printNet()
+
+	print('Training complete. Testing...')
+
+	# Testing
+	correct = 0
+	total = 0
+	with open(sys.argv[2], 'r') as f:
+		for line in f.readlines():
+			tokens = line.strip().split()
+			for i in range(64):
+				net[0][i].value = normalizeDiscrete(int(tokens[i]))
+			target = int(tokens[64])
+			feedforward(target)
+			if outputActivationFunction() == target:
+				correct += 1
+			total += 1
+
+	print('Got',correct,'/',total,'correct, or',round(correct/total, 3),'%')
