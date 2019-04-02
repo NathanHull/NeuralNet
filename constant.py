@@ -1,6 +1,8 @@
 LEARNING_FACTOR = .5
-MAX_INIT = .2
+MAX_INIT = .1
 RANDOM_SEED = 1
+BIAS_VALUE = .1
+ROUND_TO = 5
 
 # Fishing config
 # Example query: Strong,Cold,Warm,Sunny,?
