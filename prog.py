@@ -14,62 +14,67 @@ def normalizeDiscrete(x):
 
 
 def activationFunction(sigma):
+	# Threshold Function
 	# if sigma > 0:
 	# 	return 1
 	# else:
 	# 	return 0
 
-	return round((2 / (1 + math.pow(math.e, sigma * -1))) - 1, 3)
+	# Bipolar Sigmoid
+	# return round((2 / (1 + (math.e ** (sigma * -1))) - 1, 3)
+
+	# Binary Sigmoid
+	return round(1 / (1 + (math.e ** (-1 * sigma))), 3)
 
 
-def outputActivation(y):
-	if y <= .1:
-		return 0
-	elif y <= .2:
-		return 1
-	elif y <= .3:
-		return 2
-	elif y <= .4:
-		return 3
-	elif y <= .5:
-		return 4
-	elif y <= .6:
-		return 5
-	elif y <= .7:
-		return 6
-	elif y <= .8:
-		return 7
-	elif y <= .9:
-		return 8
-	else:
-		return 9
+def outputActivation():
+	# Threshold
+	# if y == 1:
+	# 	return 9
+	# else:
+	# 	return math.floor(y * 10)
 
-def backpropagate(numLayers, numNodes, target):
-	output = outputActivation(net[numLayers][0].value)
+	# Softmax
+	outputs = []
+	for node in net[numLayers].values():
+		outputs.append(node.value)
+	exps = [math.e ** i for i in outputs]
+	sum_of_exps = sum(exps)
+	softmax = [i/sum_of_exps for i in exps]
+	return softmax.index(max(softmax))
+
+
+def reverseOutput(y):
+	return (y / 10) + .05
+
+
+def backpropagate(target):
+	output = net[numLayers][0].value
+	target = reverseOutput(target)
 	outputError = output * (1 - output) * (target - output)
 
 	for i in range(NUMINITNODES):
 		for j in range(numNodes):
 			error = net[0][i].value * (1 - net[0][i].value) * (net[0][i].weights[j] * outputError)
-			net[0][i].weights[j] = round(net[0][i].weights[j] + (LEARNING_FACTOR * outputError * net[0][i].value), 3)
+			net[0][i].weights[j] += round(LEARNING_FACTOR * error * net[0][i].value, 3)
 
 	for i in range(1, numLayers):
 		for j in range(numNodes):
 			if i == numLayers - 1:
 				error = net[i][j].value * (1 - net[i][j].value) * (net[i][j].weights[0] * outputError)
-				net[i][j].weights[0] = round(net[i][j].weights[0] + (LEARNING_FACTOR * outputError * net[i][j].value), 3)
+				net[i][j].weights[0] += round(LEARNING_FACTOR * error * net[i][j].value, 3)
 			else:
 				for k in range(numNodes):
 					error = net[i][j].value * (1 - net[i][j].value) * (net[i][j].weights[k] * outputError)
-					net[i][j].weights[k] = round(net[i][j].weights[k] + (LEARNING_FACTOR * outputError * net[i][j].value), 3)
+					net[i][j].weights[k] += round(LEARNING_FACTOR * error * net[i][j].value, 3)
 
 
-def train(numLayers, numNodes, target):
+def feedforward(target):
 	# Initial layer --> layer 1
 	for i in range(numNodes):
 		sop = 0
 		for j in range(NUMINITNODES):
-			sop += (net[0][j].value * net[0][j].weights[i])
+			sop += (normalizeDiscrete(net[0][j].value) * net[0][j].weights[i])
 		sop += (net[0][NUMINITNODES].value * net[0][NUMINITNODES].weights[i])
 		net[1][i].value = activationFunction(sop)
 
@@ -77,11 +82,12 @@ def train(numLayers, numNodes, target):
 	for i in range(1, numLayers):
 		# Layer before output node
 		if (i == numLayers - 1):
-			sop = 0
 			for j in range(numNodes):
-				sop += net[i][j].value * net[i][j].weights[0]
-				sop += net[i][numNodes].value * net[i][numNodes].weights[0]
-			net[numLayers][0].value = sop
+				sop = 0
+				for k in range(NUMOUTPUTNODES):
+					sop += net[i][j].value * net[i][j].weights[k]
+					sop += net[i][numNodes].value * net[i][numNodes].weights[k]
+				net[numLayers][j].value = sop
 		else:
 			for j in range(numNodes):
 				sop = 0
@@ -90,20 +96,30 @@ def train(numLayers, numNodes, target):
 				sop += net[i][numNodes].value * net[i][numNodes].weights[j]
 				net[i+1][j].value = activationFunction(sop)
 
-	backpropagate(numLayers, numNodes, target)
+	backpropagate(target)
 
-def printNet(numLayers, numNodes):
+def printNet():
 	print('Neural Net:')
-	print('Output: %.3f (%i)' % (net[numLayers][0].value, outputActivation(net[numLayers][0].value)))
+	print('Output: %i\n' % (outputActivation()))
+	print('Output Layer')
+	for i in range(NUMOUTPUTNODES):
+		print('\t%i: %.3f' %(i, net[numLayers][i].value))
+	print()
 	for i in reversed(range(1, numLayers)):
 		print('Layer',i)
 		for j in range(numNodes + 1):
-			print('\t%.3f' % (net[i][j].value), end=' ')
+			if j == numNodes + 1:
+				print('\tB: %.3f' % (net[i][j].value), end=' ')
+			else:
+				print('\t%i: %.3f' % (j, net[i][j].value), end=' ')
 			print(net[i][j].weights)
 		print()
 	print('Initial Layer')
 	for i in range(NUMINITNODES + 1):
-		print('\t', net[0][i]. value, end=' ')
+		if i == NUMINITNODES + 1:
+			print('\tB: %.3f' % (net[0][i].value), end=' ')
+		else:
+			print('\t%i: %.3f' % (i, net[0][i].value), end=' ')
 		print(net[0][i].weights)
 	print()
 
@@ -131,8 +147,10 @@ if __name__ == '__main__':
 			net[i][j] = Node(i, j)
 		net[i][numNodes] = Node(i, numNodes) # bias node
 		net[i][numNodes].value = 1
+
 	net[numLayers] = {}
-	net[numLayers][0] = Node(numLayers, 0) # output node
+	for i in range(NUMOUTPUTNODES):
+		net[numLayers][i] = Node(numLayers, i) # output nodes
 
 	# Add random weights
 	for i in range(1, numLayers):
@@ -140,7 +158,8 @@ if __name__ == '__main__':
 		for j in range(numNodes + 1):
 			# Last hidden layer points to single output node
 			if i == numLayers - 1:
-				net[i][j].weights[0] = getSmallRandom()
+				for k in range(NUMOUTPUTNODES):
+					net[i][j].weights[k] = getSmallRandom()
 			else:
 				# Randomize weight for connection to each node
 				# in next layer (not including bias node)
@@ -159,7 +178,7 @@ if __name__ == '__main__':
 		net[0][64].weights[i] = getSmallRandom()
 
 	print('\nInitial', end=' ')
-	printNet(numLayers, numNodes)
+	printNet()
 
 	# Training (data format in constants.py)
 	with open(sys.argv[1], 'r') as f:
@@ -168,6 +187,6 @@ if __name__ == '__main__':
 			for i in range(64):
 				net[0][i].value = int(tokens[i])
 			target = int(tokens[64])
-			train(numLayers, numNodes, target)
+			feedforward(target)
 			print('Target:',target)
-			printNet(numLayers, numNodes)
+			printNet()
