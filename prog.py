@@ -37,28 +37,22 @@ def hiddenActivationFunction(sigma):
 	# if sigma >= 0:
 	# 	return sigma
 	# else:
-	# 	return (1/20) * sigma
+	# 	return (1/100) * sigma
 
 
 def hiddenErrorFunction(sigma):
-	# Sigmoid Derivative
+	# Sigmoid Derivative (assuming hidden activation function
+	# is sigmoid function)
 	return hiddenActivationFunction(sigma) * (1 - hiddenActivationFunction(sigma))
 
 	# Leaky ReLU Derivative
 	# sigma >= 0:
 	# 	return 1
 	# else:
-	# 	return (1/20)
+	# 	return (-1/100)
 
 
 def outputActivationFunction():
-	# Threshold
-	# y = net[numLayers][0].value
-	# if y == 1:
-	# 	return 9
-	# else:
-	# 	return math.floor(y * 10)
-
 	# Softmax
 	# outputs = []
 	# for node in net[numLayers].values():
@@ -69,7 +63,7 @@ def outputActivationFunction():
 	# softmax = [i/sum_of_exps for i in exps]
 	# return softmax.index(max(softmax))
 
-	# Max
+	# Normal Max
 	outputs = []
 	for i in range(NUMOUTPUTNODES):
 		outputs.append(net[numLayers][i].value)
