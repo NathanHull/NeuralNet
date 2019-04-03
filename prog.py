@@ -53,11 +53,11 @@ def hiddenErrorFunction(sigma):
 
 def outputActivationFunction():
 	# Threshold
-	y = net[numLayers][0].value
-	if y == 1:
-		return 9
-	else:
-		return math.floor(y * 10)
+	# y = net[numLayers][0].value
+	# if y == 1:
+	# 	return 9
+	# else:
+	# 	return math.floor(y * 10)
 
 	# Softmax
 	# outputs = []
@@ -69,62 +69,50 @@ def outputActivationFunction():
 	# softmax = [i/sum_of_exps for i in exps]
 	# return softmax.index(max(softmax))
 
+	# Max
+	outputs = []
+	for i in range(NUMOUTPUTNODES):
+		outputs.append(net[numLayers][i].value)
+	return outputs.index(max(outputs))
+
 
 def outputErrorFunction(output, target):
-	# Sigmoid
-	# return output * (target - output) * (1 - output)
-
-	# Softmax
-	# outputs = []
-	# for node in net[numLayers].values():
-	# 	outputs.append(node.value)
-	# inputMax = max(outputs)
-	# exps = [math.e ** (i - inputMax) for i in outputs]
-	# sum_of_exps = sum(exps)
-	# softmax = [i/sum_of_exps for i in exps]
-	# thisSum = sum(softmax)
-	# return softmax[output] - softmax[target]
-	# return -1 * math.log(softmax[softmaxIndex]/thisSum)
-
-	# Sum of Squares
-	result = 0
-	for i in net[numLayers]:
-		if i == target:
-			result += (net[numLayers][i] - 1) ** 2
-		else:
-			result += (net[numLayers][i] - 0) ** 2
-	return result
+	if output == target:
+		return 1 - net[numLayers][output].value
+	else:
+		return 0 - net[numLayers][output].value
 
 	# Cross Entropy
 	# result = 0
-	# for i in net[numLayers]:
+	# for i in range(NUMOUTPUTLAYERS):
 	# 	result += net[numLayers][i].value * math.log(net[numLayers][i].value)
 	# return result
 
 
 def backpropagate(target):
-	output = outputActivationFunction()
-	outputError = outputErrorFunction(net[numLayers][0].value, (target/10) + .05)
-
 	### Calculate Errors
 	errors = {}
 	for i in range(numLayers + 1):
 		errors[i] = {}
 
+	# Output layer
+	for i in range(NUMOUTPUTNODES):
+		errors[numLayers][i] = outputErrorFunction(i, target)
+
 	# Inner hidden layers
-	for i in range(1, numLayers):
+	for i in reversed(range(1, numLayers)):
 		for j in range(numNodes + 1):
 			# Layer before output layers
 			if i == numLayers - 1:
+				sop = 0
 				for k in range(NUMOUTPUTNODES):
-					errors[i][j] = net[i][j].value * (1 - net[i][j].value) * (net[i][j].weights[k] * outputError)
+					sop += net[i][j].weights[k] * errors[i + 1][k]
+				errors[i][j] = net[i][j].value * (1 - net[i][j].value) * sop
 			else:
+				sop = 0
 				for k in range(numNodes):
-					errors[i][j] = net[i][j].value * (1 - net[i][j].value) * (net[i][j].weights[k] * outputError)
-
-	# Output layer
-	for i in range(NUMOUTPUTNODES):
-		errors[numLayers][i] = outputError
+					sop += net[i][j].weights[k] * errors[i + 1][k]
+				errors[i][j] = net[i][j].value * (1 - net[i][j].value) * sop
 
 	### Learn (adjust weights)
 	# Initial layer --> layer 1
@@ -163,8 +151,8 @@ def feedforward(target):
 			net[i+1][j].value = hiddenActivationFunction(sop)
 
 	# Layer before output layer
+	i = numLayers - 1
 	for j in range(NUMOUTPUTNODES):
-		i = numLayers - 1
 		sop = 0
 		for k in range(numNodes):
 			sop += net[i][k].value * net[i][k].weights[j]
@@ -257,8 +245,8 @@ if __name__ == '__main__':
 	for i in range(numNodes):
 		net[0][64].weights[i] = getSmallRandom()
 
-	isFirst = True
 	# Training (data format in constants.py)
+	isFirst = True
 	with open(sys.argv[1], 'r') as f:
 		for epoch in range(EPOCHS):
 			for line in f.readlines():
@@ -272,8 +260,8 @@ if __name__ == '__main__':
 					printNet()
 				feedforward(target)
 				backpropagate(target)
-				print('Target:',target)
-				printNet()
+				# print('Target:',target)
+				# printNet()
 
 	print('Training complete. Testing...')
 
@@ -291,4 +279,4 @@ if __name__ == '__main__':
 				correct += 1
 			total += 1
 
-	print('Got',correct,'/',total,'correct, or',10*round(correct/total, 3),'%')
+	print('Got',correct,'/',total,'correct, or',round(100*correct/total, 3),'%')
