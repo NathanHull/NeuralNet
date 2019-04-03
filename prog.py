@@ -53,39 +53,58 @@ def hiddenErrorFunction(sigma):
 
 def outputActivationFunction():
 	# Threshold
-	# if y == 1:
-	# 	return 9
-	# else:
-	# 	return math.floor(y * 10)
+	y = net[numLayers][0].value
+	if y == 1:
+		return 9
+	else:
+		return math.floor(y * 10)
 
 	# Softmax
-	outputs = []
-	for node in net[numLayers].values():
-		outputs.append(node.value)
-	inputMax = max(outputs)
-	exps = [math.e ** (i - inputMax) for i in outputs]
-	sum_of_exps = sum(exps)
-	softmax = [i/sum_of_exps for i in exps]
-	return softmax.index(max(softmax))
+	# outputs = []
+	# for node in net[numLayers].values():
+	# 	outputs.append(node.value)
+	# inputMax = max(outputs)
+	# exps = [math.e ** (i - inputMax) for i in outputs]
+	# sum_of_exps = sum(exps)
+	# softmax = [i/sum_of_exps for i in exps]
+	# return softmax.index(max(softmax))
 
 
 def outputErrorFunction(output, target):
-	#Softmax
-	outputs = []
-	for node in net[numLayers].values():
-		outputs.append(node.value)
-	inputMax = max(outputs)
-	exps = [math.e ** (i - inputMax) for i in outputs]
-	sum_of_exps = sum(exps)
-	softmax = [i/sum_of_exps for i in exps]
-	thisSum = sum(softmax)
-	return softmax[output] - softmax[target]
+	# Sigmoid
+	# return output * (target - output) * (1 - output)
+
+	# Softmax
+	# outputs = []
+	# for node in net[numLayers].values():
+	# 	outputs.append(node.value)
+	# inputMax = max(outputs)
+	# exps = [math.e ** (i - inputMax) for i in outputs]
+	# sum_of_exps = sum(exps)
+	# softmax = [i/sum_of_exps for i in exps]
+	# thisSum = sum(softmax)
+	# return softmax[output] - softmax[target]
 	# return -1 * math.log(softmax[softmaxIndex]/thisSum)
+
+	# Sum of Squares
+	result = 0
+	for i in net[numLayers]:
+		if i == target:
+			result += (net[numLayers][i] - 1) ** 2
+		else:
+			result += (net[numLayers][i] - 0) ** 2
+	return result
+
+	# Cross Entropy
+	# result = 0
+	# for i in net[numLayers]:
+	# 	result += net[numLayers][i].value * math.log(net[numLayers][i].value)
+	# return result
 
 
 def backpropagate(target):
 	output = outputActivationFunction()
-	outputError = outputErrorFunction(output, target)
+	outputError = outputErrorFunction(net[numLayers][0].value, (target/10) + .05)
 
 	### Calculate Errors
 	errors = {}
