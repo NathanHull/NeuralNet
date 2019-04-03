@@ -42,14 +42,13 @@ def hiddenActivationFunction(sigma):
 
 def hiddenErrorFunction(sigma):
 	# Sigmoid Derivative
-	return sigma * (1 - sigma)
+	return hiddenActivationFunction(sigma) * (1 - hiddenActivationFunction(sigma))
 
 	# Leaky ReLU Derivative
 	# sigma >= 0:
 	# 	return 1
 	# else:
 	# 	return (1/20)
-
 
 
 def outputActivationFunction():
@@ -93,14 +92,9 @@ def backpropagate(target):
 	for i in range(numLayers + 1):
 		errors[i] = {}
 
-	# Initial layer --> layer 1
-	# for i in range(NUMINITNODES):
-	# 	for j in range(numNodes):
-	# 		errors[0][i] = net[0][i].value * (1 - net[0][i].value) * (net[0][i].weights[j] * outputError)
-
 	# Inner hidden layers
 	for i in range(1, numLayers):
-		for j in range(numNodes):
+		for j in range(numNodes + 1):
 			# Layer before output layers
 			if i == numLayers - 1:
 				for k in range(NUMOUTPUTNODES):
@@ -113,20 +107,15 @@ def backpropagate(target):
 	for i in range(NUMOUTPUTNODES):
 		errors[numLayers][i] = outputError
 
-	print('\n\nERRORS:\n\n')
-	for i in errors:
-		for j in errors[i]:
-			print(i,j,errors[i][j],end=' | ')
-		print()
 	### Learn (adjust weights)
 	# Initial layer --> layer 1
-	for i in range(NUMINITNODES):
+	for i in range(NUMINITNODES + 1):
 		for j in range(numNodes):
 			net[0][i].weights[j] += LEARNING_FACTOR * errors[0 + 1][j] * net[0][i].value
 
 	# Inner hidden layers
 	for i in range(1, numLayers):
-		for j in range(numNodes):
+		for j in range(numNodes + 1):
 			# Layer before output layer
 			if i == numLayers - 1:
 				for k in range(NUMOUTPUTNODES):
@@ -190,8 +179,8 @@ def printNet():
 		else:
 			print('\t%i: %.3f' % (i, net[0][i].value), end=' ')
 		print('[',end=' ')
-		for k, v in net[0][j].weights.items():
-			print('%i: %.3f' % (k, net[0][j].weights[k]), end=' ')
+		for k, v in net[0][i].weights.items():
+			print('%i: %.3f' % (k, net[0][i].weights[k]), end=' ')
 		print(']')
 	print()
 
