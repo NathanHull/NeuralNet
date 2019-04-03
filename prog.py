@@ -247,8 +247,8 @@ if __name__ == '__main__':
 
 	# Training (data format in constants.py)
 	isFirst = True
-	with open(sys.argv[1], 'r') as f:
-		for epoch in range(EPOCHS):
+	for epoch in range(EPOCHS):
+		with open(sys.argv[1], 'r') as f:
 			for line in f.readlines():
 				tokens = line.strip().split()
 				for i in range(64):
@@ -279,4 +279,6 @@ if __name__ == '__main__':
 				correct += 1
 			total += 1
 
+	print('\nFinal',end=' ')
+	printNet()
 	print('Got',correct,'/',total,'correct, or',round(100*correct/total, 3),'%')
