@@ -3,7 +3,7 @@ MAX_INIT = .1
 RANDOM_SEED = 1
 BIAS_VALUE = .1
 ROUND_TO = 5
-EPOCHS = 20
+EPOCHS = 1
 
 # Fishing config
 # Example query: Strong,Cold,Warm,Sunny,?
