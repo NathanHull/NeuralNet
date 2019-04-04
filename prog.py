@@ -126,7 +126,7 @@ def backpropagate(target):
 					net[i][j].weights[k] += LEARNING_FACTOR * errors[i + 1][k] * net[i][j].value
 
 
-def feedforward(target):
+def feedforward():
 	# Initial layer --> layer 1
 	for i in range(numNodes):
 		sop = 0
@@ -252,7 +252,7 @@ if __name__ == '__main__':
 					isFirst = False
 					print('\nInitial', end=' ')
 					printNet()
-				feedforward(target)
+				feedforward()
 				backpropagate(target)
 				# print('Target:',target)
 				# printNet()
@@ -268,7 +268,7 @@ if __name__ == '__main__':
 			for i in range(64):
 				net[0][i].value = normalizeDiscrete(int(tokens[i]))
 			target = int(tokens[64])
-			feedforward(target)
+			feedforward()
 			if outputActivationFunction() == target:
 				correct += 1
 			total += 1
