@@ -46,7 +46,7 @@ def hiddenErrorFunction(sigma):
 	return hiddenActivationFunction(sigma) * (1 - hiddenActivationFunction(sigma))
 
 	# Leaky ReLU Derivative
-	# sigma >= 0:
+	# if sigma >= 0:
 	# 	return 1
 	# else:
 	# 	return (-1/100)
